@@ -52,7 +52,7 @@ And it does not commit. Ever, unless asked.
 ## Install
 
 ```bash
-git clone https://github.com/RealLight04/delegate.git ~/.claude/skills/delegate
+git clone https://github.com/RealLight04/claude-delegate.git ~/.claude/skills/delegate
 ```
 
 That path makes it a user-level skill, available in every project. For a single project instead,
@@ -137,7 +137,7 @@ diff 정독), 실패하면 한 등급 올려 재시도하고, 그래도 안 되�
 ### 설치
 
 ```bash
-git clone https://github.com/RealLight04/delegate.git ~/.claude/skills/delegate
+git clone https://github.com/RealLight04/claude-delegate.git ~/.claude/skills/delegate
 ```
 
 이 경로에 두면 사용자 레벨 스킬이 되어 모든 프로젝트에서 쓸 수 있습니다. 특정 프로젝트에서만
