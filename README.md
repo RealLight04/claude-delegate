@@ -1,5 +1,7 @@
 # delegate
 
+[![License: MIT](https://img.shields.io/github/license/RealLight04/claude-delegate)](LICENSE)
+
 A [Claude Code](https://claude.com/claude-code) skill that grades a pile of tasks by risk and hands
 each group to the model that actually fits it — Haiku, Sonnet, or Opus.
 
@@ -78,6 +80,21 @@ With no arguments it uses the task list built up in the conversation. It also tr
 when a list of 3+ independent to-dos has just been assembled — and deliberately stays quiet for a
 single one-off instruction.
 
+## Example output
+
+A code review turns up four issues in a small app. `/delegate` grades each one and reports back
+like this:
+
+| Task | Grade | Model | Why | Outcome |
+|---|---|---|---|---|
+| Remove unused import in `utils.py` | Clerical | `haiku` | Mechanical, no judgment call | Done |
+| Fix off-by-one in pagination (`api.py`) | Standard | `sonnet` | Needs the surrounding loop logic | Done |
+| Add missing null check (`user.py`) | Standard | `sonnet` | Needs to understand caller assumptions | Done |
+| Rewrite payment webhook retry logic (`billing.py`) | High-risk | `opus` | Payment path, hard to reverse if wrong | Done — diff reviewed before accepting |
+
+Four different files means four groups, so all four ran in parallel — each on the model that
+actually fit the risk, not whichever model happened to be driving the session.
+
 ## Requirements
 
 - Claude Code, with the Agent tool available (it needs the `model` parameter to delegate)
@@ -98,15 +115,14 @@ MIT — see [LICENSE](LICENSE).
 
 작업이 쌓였을 때 모든 일을 단일 모델로 처리하면 두 가지 문제가 생김.
 
-- **고성능 모델 전담**: 단순 오타나 포맷팅 같은 작업에 비싼 모델을 쓰게 돼서 비용 낭비.
+- **고성능 모델 전담**: 단순 오타나 포맷팅 같은 작업에 비싼 모델을 쓰게 돼서 비용이 낭비됨.
 - **경량 모델 전담**: 미묘하고 복잡한 로직을 경량 모델에 맡기면 오류를 제대로 못 잡고
   코드를 조용히 망가뜨림.
 
 결국 "어떤 모델에 맡길 것인가"에 대한 판단이 매번 직관에 의존해서 일관성 없이 내려짐.
 
-이 스킬은 단순한 모델 추천에 그치지 않음. 메인 세션이 작업 등급을 판단·그룹화·검증하고,
-Agent 도구의 `model` 파라미터를 통해 지정된 모델의 서브에이전트에 실제 작업을 **직접
-위임**함.
+이 스킬은 단순한 모델 추천에 그치지 않음. 등급 판단·그룹화·검증은 메인 세션이 하고, 실제
+작업은 Agent 도구의 `model` 파라미터로 지정한 모델의 서브에이전트에 **직접 위임**함.
 
 | 등급 | 판단 기준 | 할당 모델 |
 |---|---|---|
@@ -163,3 +179,18 @@ git clone https://github.com/RealLight04/claude-delegate.git ~/.claude/skills/de
 `/delegate`로 직접 부르거나, 뒤에 목록을 붙여도 됨. 인자 없이 부르면 대화에서 쌓인 작업
 목록을 씀. 독립적인 할 일이 3개 이상 정리된 직후에는 알아서 발동하고, 단발 지시 하나에는
 일부러 발동 안 함.
+
+### 예시 출력
+
+작은 앱을 코드 리뷰했더니 문제 4개가 나왔다고 하면, `/delegate`는 이렇게 등급을 매기고
+보고함.
+
+| 작업 | 등급 | 모델 | 이유 | 결과 |
+|---|---|---|---|---|
+| `utils.py`의 미사용 import 제거 | 사무적 | `haiku` | 기계적이고 판단 요소 없음 | 완료 |
+| 페이지네이션 off-by-one 수정 (`api.py`) | 일반 | `sonnet` | 주변 반복문 로직 이해 필요 | 완료 |
+| 널 체크 누락 추가 (`user.py`) | 일반 | `sonnet` | 호출부의 가정을 이해해야 함 | 완료 |
+| 결제 웹훅 재시도 로직 재작성 (`billing.py`) | 고위험 | `opus` | 결제 경로라 되돌리기 어려움 | 완료 — 승인 전 diff 직접 검토 |
+
+파일이 4개로 갈리니 그룹도 4개 — 네 작업 모두 병렬로 처리되고, 세션이 마침 쓰던 모델이
+아니라 각 위험도에 실제로 맞는 모델로 처리됨.
