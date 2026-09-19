@@ -85,12 +85,14 @@ single one-off instruction.
 A code review turns up four issues in a small app. `/delegate` grades each one and reports back
 like this:
 
-| Task | Grade | Model | Why | Outcome |
-|---|---|---|---|---|
-| Remove unused import in `utils.py` | Clerical | `haiku` | Mechanical, no judgment call | Done |
-| Fix off-by-one in pagination (`api.py`) | Standard | `sonnet` | Needs the surrounding loop logic | Done |
-| Add missing null check (`user.py`) | Standard | `sonnet` | Needs to understand caller assumptions | Done |
-| Rewrite payment webhook retry logic (`billing.py`) | High-risk | `opus` | Payment path, hard to reverse if wrong | Done — diff reviewed before accepting |
+1. **Remove unused import in `utils.py`** — Clerical → `haiku`
+   Mechanical, no judgment call. **Done.**
+2. **Fix off-by-one in pagination (`api.py`)** — Standard → `sonnet`
+   Needs the surrounding loop logic. **Done.**
+3. **Add missing null check (`user.py`)** — Standard → `sonnet`
+   Needs to understand caller assumptions. **Done.**
+4. **Rewrite payment webhook retry logic (`billing.py`)** — High-risk → `opus`
+   Payment path, hard to reverse if wrong. **Done** — diff reviewed before accepting.
 
 Four different files means four groups, so all four ran in parallel — each on the model that
 actually fit the risk, not whichever model happened to be driving the session.
@@ -185,12 +187,14 @@ git clone https://github.com/RealLight04/claude-delegate.git ~/.claude/skills/de
 작은 앱을 코드 리뷰했더니 문제 4개가 나왔다고 하면, `/delegate`는 이렇게 등급을 매기고
 보고함.
 
-| 작업 | 등급 | 모델 | 이유 | 결과 |
-|---|---|---|---|---|
-| `utils.py`의 미사용 import 제거 | 사무적 | `haiku` | 기계적이고 판단 요소 없음 | 완료 |
-| 페이지네이션 off-by-one 수정 (`api.py`) | 일반 | `sonnet` | 주변 반복문 로직 이해 필요 | 완료 |
-| 널 체크 누락 추가 (`user.py`) | 일반 | `sonnet` | 호출부의 가정을 이해해야 함 | 완료 |
-| 결제 웹훅 재시도 로직 재작성 (`billing.py`) | 고위험 | `opus` | 결제 경로라 되돌리기 어려움 | 완료 — 승인 전 diff 직접 검토 |
+1. **`utils.py`의 미사용 import 제거** — 사무적 → `haiku`
+   기계적이고 판단 요소 없음. **완료.**
+2. **페이지네이션 off-by-one 수정 (`api.py`)** — 일반 → `sonnet`
+   주변 반복문 로직 이해 필요. **완료.**
+3. **널 체크 누락 추가 (`user.py`)** — 일반 → `sonnet`
+   호출부의 가정을 이해해야 함. **완료.**
+4. **결제 웹훅 재시도 로직 재작성 (`billing.py`)** — 고위험 → `opus`
+   결제 경로라 되돌리기 어려움. **완료** — 승인 전 diff 직접 검토.
 
 파일이 4개로 갈리니 그룹도 4개 — 네 작업 모두 병렬로 처리되고, 세션이 마침 쓰던 모델이
 아니라 각 위험도에 실제로 맞는 모델로 처리됨.
