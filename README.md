@@ -52,7 +52,8 @@ So before anything is handed off, the skill checks:
   says so in one line rather than forcing a split.
 
 It also never trusts a subagent's "done" — it verifies per grade (look at it / run the tests / read
-the diff), retries one grade up on failure, and stops and reports rather than looping.
+the diff), retries once at the same grade with a tighter scope, then once one grade up, and stops
+and reports rather than looping.
 
 And it does not commit. Ever, unless asked.
 
@@ -163,8 +164,8 @@ Claude Code 스킬입니다.
 서브에이전트가 끝났다고 보고해도 그 말만 믿지 않습니다. 확인하는 강도는 등급마다 달라서 사무적 작업은
 결과를 직접 보고 일반 작업은 테스트까지 돌리며 고위험 작업은 diff를 직접 읽어 본 다음에 받아들입니다.
 
-확인에서 문제가 나오면 한 등급 위 모델로 다시 시도합니다. 그래도 안 되면 계속 붙잡고 있지 않고 멈춘 뒤
-무엇을 해 봤는지 보고합니다. 커밋은 요청받기 전에는 절대 하지 않습니다.
+확인에서 문제가 나오면 먼저 같은 모델에게 범위를 더 좁혀서 한 번 더 맡깁니다. 그래도 안 되면 한 등급 위
+모델로 한 번 더 시도합니다. 거기서도 안 되면 계속 붙잡고 있지 않고 멈춘 뒤 무엇을 해 봤는지 보고합니다. 커밋은 요청받기 전에는 절대 하지 않습니다.
 
 ### review-fix와 무엇이 다른가
 

@@ -15,8 +15,8 @@ So in these cases, skip the skill and do the work directly.
   parallel. A session that already holds the context will finish sequential work faster.
 - **This session already built up the context.** If you have read the files and gone several
   turns with the user, rewriting that context into a prompt eats the entire benefit.
-- **The input is review findings and a dedicated review-fix workflow exists.** Use that instead —
-  it has safeguards built around that specific input shape.
+- **The input is review findings.** Use the `review-fix` skill if it is installed. It has
+  safeguards built around that specific input shape.
 - **It is one deep, indivisible task.** → go to "Recommending a session model" below.
 
 # Grading a task list and delegating by model
@@ -57,9 +57,12 @@ it correctly?**
 no context does not stop when it gets stuck — it invents something plausible and edits the wrong
 thing.
 
-Before starting, capture a **baseline** with `git status --short`. The repo may already have
-unrelated modified or untracked files — you need the baseline to separate "what this skill changed"
-from "what was already there" when you report at the end.
+Before starting, capture a **baseline**: `git status --short --untracked-files=all` (so each
+untracked file is listed on its own, not just its directory), plus `git hash-object <path>` for every
+file it lists. A deleted path has no hash; record it as deleted. The repo may already have unrelated
+modified or untracked files, and this skill may edit one of them. Paths alone cannot show that; the
+hashes can. You need the baseline to separate "what this skill changed" from "what was already
+there" when you report at the end.
 
 ## Step 2 — Grade each task
 
@@ -75,6 +78,14 @@ cost of a better model.
 Read the target project's CLAUDE.md before grading. The traps written there change the grade — if
 it states a pairing rule ("change this file and you must change that one too"), the real scope is
 the whole pair, and the grade follows that larger scope.
+
+**Tiers outside this table.** It names `haiku`/`sonnet`/`opus` because those are the delegation
+tiers, cheapest to most expensive. A new release inside one of them needs no change here. If the
+Agent tool offers another tier (today `fable`, above Opus), do not slot it into this ladder on
+assumption. Check how it is positioned first. `fable` is documented for demanding reasoning and
+long-horizon agentic work, and it costs more and responds slower than Opus. A short, self-contained
+task for a zero-context subagent rarely needs that, so it stays out of the table and appears under
+"Recommending a session model" below.
 
 ## Step 3 — Group, then delegate
 
@@ -93,8 +104,8 @@ the work directly. **The threshold is the number of groups after grouping, not t
 
 Each Agent call must state:
 
-- Exactly what to do (file, location, what changes, criteria)
-- That it should do **only this** — no fixing other problems it happens to notice
+- Exactly what to do (file, location, what changes, criteria), for every task in the group
+- That it should do **only these tasks** — no fixing other problems it happens to notice
 - The relevant CLAUDE.md rules, including "you must also change this file" if a pairing rule applies
 - Not to commit
 
@@ -118,9 +129,9 @@ quote the relevant rules into the prompt.** Use absolute paths throughout.
 When verification does not match expectations, do not let it slide:
 
 1. Retry with the same model, stating what failed and the exact scope more explicitly.
-2. If that fails, retry one grade up (clerical → standard → high-risk).
-3. If high-risk also fails, stop. Report what you tried and the current state to the user. Do not
-   retry forever, and do not leave it quietly broken.
+2. If that fails, retry once, one grade up (clerical → standard, standard → high-risk).
+3. If that retry also fails, or there is no grade above, stop. Report what you tried and the current
+   state to the user. Do not retry forever, and do not leave it quietly broken.
 
 ## Step 5 — Report
 
@@ -130,8 +141,11 @@ skipped, failed after retry).
 Anything you did yourself instead of delegating, or left out as too vague, goes in a **separate**
 group with the reason. Do not fold it into "all done."
 
-Compare a final `git status --short` against the Step 1 baseline and show **only what this skill
-changed.** Call out anything already in the baseline as pre-existing and unrelated.
+Compare the final `git status --short --untracked-files=all` and hashes against the Step 1 baseline
+and show **only what this skill changed.** New paths are this skill's. A baseline path whose hash or
+status changed (for example, modified to deleted) was edited here too; label it "already modified
+before, also edited by this skill." Only baseline paths with an unchanged hash are called
+pre-existing and unrelated.
 
 **Do not commit or push unless the user asks.**
 
@@ -142,7 +156,9 @@ judgment that needs the whole conversation — should not be forced through dele
 and each piece works blind to the whole, and stitching them back together costs more than was saved.
 
 For that case, say it in one line: **"This is better done directly on a stronger model than
-delegated — consider switching with `/model opus`."**
+delegated — consider switching with `/model opus`."** Opus is the default suggestion. Name a tier
+above it (today `fable`) only when the task is long-horizon and demanding enough that Opus at higher
+effort would likely still fall short.
 
 You cannot change your own model. Recommend, and let the user decide. If they decline, proceed
 directly on the current model — never stall the work waiting on the recommendation.
@@ -151,12 +167,14 @@ directly on the current model — never stall the work waiting on the recommenda
 
 - [ ] There are 3+ tasks and they are independent (otherwise do not use this skill)
 - [ ] After grouping by file there are still 2+ groups (one group means delegation buys nothing)
-- [ ] Captured a `git status --short` baseline before starting
+- [ ] Captured a baseline (`git status --short --untracked-files=all` plus file hashes) before starting
 - [ ] Every task is concrete enough for a zero-context agent to execute
 - [ ] Read the target project's CLAUDE.md
 - [ ] If the target is outside the current project, its CLAUDE.md is in the prompt and paths are absolute
 - [ ] Same-file and paired-file tasks are in one call
 - [ ] Mixed-grade groups were sent at the highest grade
+- [ ] If the Agent tool offers a tier not in the Step 2 table, checked how it is positioned before
+      using it, rather than assuming it fits the delegation ladder
 - [ ] Did not trust "done" — verified per grade
 - [ ] Reported separately whatever was not delegated or was left out
 - [ ] Reported only changes made by this skill, against the baseline
