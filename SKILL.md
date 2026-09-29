@@ -33,7 +33,8 @@ the file edits happen in the chosen model's subagent.
 
 ## Input
 
-- If `$ARGUMENTS` is present, treat it as the task list.
+- If the user passed arguments (they arrive on the `ARGUMENTS:` line at the end of this prompt),
+  treat them as the task list.
 - Otherwise use the list built up in this conversation — to-dos the user enumerated, improvements
   you proposed and they approved, a plan's checklist, to-dos that fell out of research. The source
   does not matter.
@@ -57,12 +58,13 @@ it correctly?**
 no context does not stop when it gets stuck — it invents something plausible and edits the wrong
 thing.
 
-Before starting, capture a **baseline**: `git status --short --untracked-files=all` (so each
-untracked file is listed on its own, not just its directory), plus `git hash-object <path>` for every
-file it lists. A deleted path has no hash; record it as deleted. The repo may already have unrelated
-modified or untracked files, and this skill may edit one of them. Paths alone cannot show that; the
-hashes can. You need the baseline to separate "what this skill changed" from "what was already
-there" when you report at the end.
+Before starting, capture a **baseline** in every repository the tasks touch (`git -C <repo>` for any
+other than the current one): `git -c core.quotePath=false status --porcelain --untracked-files=all` (so each untracked file is
+listed on its own, not just its directory), plus `git hash-object <path>` for every file it lists. For a
+rename, hash the new path; strip the quotes git adds around paths that contain spaces. A deleted path has no hash; record it as
+deleted. The repo may already have unrelated modified or untracked files, and this skill may edit one
+of them. Paths alone cannot show that; the hashes can. You need the baseline to separate "what this
+skill changed" from "what was already there" when you report at the end.
 
 ## Step 2 — Grade each task
 
@@ -107,6 +109,7 @@ Each Agent call must state:
 - Exactly what to do (file, location, what changes, criteria), for every task in the group
 - That it should do **only these tasks** — no fixing other problems it happens to notice
 - The relevant CLAUDE.md rules, including "you must also change this file" if a pairing rule applies
+- To delete any scratch or cache files its own testing creates (temp scripts, `__pycache__`)
 - Not to commit
 
 ### If the target is outside the current project, pass its CLAUDE.md through by hand
@@ -123,14 +126,17 @@ quote the relevant rules into the prompt.** Use absolute paths throughout.
 **Never take "done" at face value.** The weight of verification varies by grade; skipping it does not.
 
 - Clerical — look at the result yourself (read the file, or check `git status`).
-- Standard — the above, plus run the smoke test or test script if one exists.
+- Standard — the above, plus run the smoke test or test script if one exists. For a UI change, a
+  passing build is not the check: if a browser automation tool (e.g. Playwright) is available,
+  exercise the behavior the task names.
 - High-risk — the above, plus read the diff yourself and confirm it stayed inside scope.
 
 When verification does not match expectations, do not let it slide:
 
 1. Retry with the same model, stating what failed and the exact scope more explicitly.
-2. If that fails, retry once, one grade up (clerical → standard, standard → high-risk).
-3. If that retry also fails, or there is no grade above, stop. Report what you tried and the current
+2. If that fails, retry once, one grade up (clerical → standard, standard → high-risk). Never
+   escalate to a model outside the Step 2 table.
+3. If that retry also fails, or there is no grade above in that table, stop. Report what you tried and the current
    state to the user. Do not retry forever, and do not leave it quietly broken.
 
 ## Step 5 — Report
@@ -141,11 +147,12 @@ skipped, failed after retry).
 Anything you did yourself instead of delegating, or left out as too vague, goes in a **separate**
 group with the reason. Do not fold it into "all done."
 
-Compare the final `git status --short --untracked-files=all` and hashes against the Step 1 baseline
-and show **only what this skill changed.** New paths are this skill's. A baseline path whose hash or
-status changed (for example, modified to deleted) was edited here too; label it "already modified
-before, also edited by this skill." Only baseline paths with an unchanged hash are called
-pre-existing and unrelated.
+Compare the final `git -c core.quotePath=false status --porcelain --untracked-files=all` and hashes, in each repository the
+baseline covered, against the Step 1 baseline and show **only what this skill changed.** New paths
+are this skill's. A baseline path whose hash or status changed (for example, modified to deleted), or
+that has vanished from the final status, was edited here too; label it "already modified before,
+also edited by this skill." Only baseline paths with an unchanged hash are called pre-existing and
+unrelated.
 
 **Do not commit or push unless the user asks.**
 
@@ -166,16 +173,19 @@ directly on the current model — never stall the work waiting on the recommenda
 ## Checklist
 
 - [ ] There are 3+ tasks and they are independent (otherwise do not use this skill)
-- [ ] After grouping by file there are still 2+ groups (one group means delegation buys nothing)
-- [ ] Captured a baseline (`git status --short --untracked-files=all` plus file hashes) before starting
+- [ ] After grouping by file there are still 2+ groups, or the one group is a file this session has
+      not read (otherwise delegation buys nothing)
+- [ ] Captured a baseline in every repo touched (`git -c core.quotePath=false status --porcelain --untracked-files=all` plus
+      file hashes) before starting
 - [ ] Every task is concrete enough for a zero-context agent to execute
 - [ ] Read the target project's CLAUDE.md
 - [ ] If the target is outside the current project, its CLAUDE.md is in the prompt and paths are absolute
 - [ ] Same-file and paired-file tasks are in one call
 - [ ] Mixed-grade groups were sent at the highest grade
 - [ ] If the Agent tool offers a tier not in the Step 2 table, checked how it is positioned before
-      using it, rather than assuming it fits the delegation ladder
+      using it, rather than assuming it fits the delegation ladder (and never used it as a retry
+      escalation)
 - [ ] Did not trust "done" — verified per grade
 - [ ] Reported separately whatever was not delegated or was left out
 - [ ] Reported only changes made by this skill, against the baseline
-- [ ] Did not commit
+- [ ] Did not commit unless the user asked

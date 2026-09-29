@@ -79,7 +79,7 @@ Invoke it explicitly:
 Optionally pass the list directly:
 
 ```
-/delegate fix the three a11y findings in the audit above
+/delegate fix the README typo, the dark-mode bug on the settings page, and the payment retry logic
 ```
 
 With no arguments it uses the task list built up in the conversation. It also triggers on its own
@@ -88,15 +88,15 @@ single one-off instruction.
 
 ## Example output
 
-A code review turns up four issues in a small app. `/delegate` grades each one and reports back
-like this:
+Before a release you have four unrelated to-dos on a small app. `/delegate` grades each one and
+reports back like this:
 
-1. **Remove unused import in `utils.py`** — Clerical → `haiku`
+1. **Fix a typo in the README install section** — Clerical → `haiku`
    Mechanical, no judgment call. **Done.**
-2. **Fix off-by-one in pagination (`api.py`)** — Standard → `sonnet`
-   Needs the surrounding loop logic. **Done.**
-3. **Add missing null check (`user.py`)** — Standard → `sonnet`
-   Needs to understand caller assumptions. **Done.**
+2. **Fix the dark-mode bug on the settings page (`settings.css`)** — Standard → `sonnet`
+   Needs the surrounding style rules. **Done.**
+3. **Add a log cleanup script (`scripts/clean_logs.py`)** — Standard → `sonnet`
+   A new file that follows the existing scripts. **Done.**
 4. **Rewrite payment webhook retry logic (`billing.py`)** — High-risk → `opus`
    Payment path, hard to reverse if wrong. **Done** — diff reviewed before accepting.
 
@@ -172,11 +172,11 @@ Claude Code 스킬입니다.
 같은 사람이 만든 [review-fix](https://github.com/RealLight04/review-fix-skill)도 등급을 매겨 모델을 고르고
 결과를 검증합니다. 둘을 가르는 건 무엇을 입력으로 받느냐입니다.
 
-delegate는 서로 독립적인 할 일 목록이면 종류를 가리지 않습니다. 기능 추가든 리팩터링이든 리뷰 결과든
-넘길 수 있습니다. 그래서 넘기기 전에 이 작업이 맥락 없이도 이해되는지와 묶은 뒤 그룹이 몇 개 남는지를
-먼저 따집니다. review-fix는 코드 리뷰가 이미 찾아낸 finding만 받습니다. 파일과 줄과 문제가 정해져 있으니 위임할지
+delegate는 서로 독립적인 할 일 목록이면 종류를 가리지 않습니다. 기능 추가든 리팩터링이든 넘길 수
+있습니다. 그래서 넘기기 전에 이 작업이 맥락 없이도 이해되는지와 묶은 뒤 그룹이 몇 개 남는지를 먼저
+따집니다. 리뷰 결과는 review-fix가 설치돼 있으면 그쪽에 맡깁니다. review-fix는 코드 리뷰가 이미 찾아낸 finding만 받습니다. 파일과 줄과 문제가 정해져 있으니 위임할지
 말지를 따질 필요가 적고 대신 검증 안 된 finding 거르기, `CLAUDE.md`에 그 규칙이 정말 있는지 확인하기,
-리뷰 뒤에 파일이 바뀐 finding 건너뛰기처럼 리뷰 수정에 필요한 장치가 더 촘촘합니다.
+리뷰 뒤에 가리킨 줄이 달라진 finding 건너뛰기처럼 리뷰 수정에 필요한 장치가 더 촘촘합니다.
 
 정리하면 delegate는 범용 위임기이고 review-fix는 그중 리뷰 finding 처리만 떼어 더 깊게 판 버전입니다.
 
@@ -208,15 +208,15 @@ git clone https://github.com/RealLight04/claude-delegate.git ~/.claude/skills/de
 
 ### 예시 출력
 
-작은 앱을 코드 리뷰했더니 문제가 네 개 나왔다고 해 봅시다. `/delegate`는 하나씩 등급을 매기고 이렇게
-보고합니다.
+배포 전에 작은 앱에 서로 관련 없는 할 일이 네 개 쌓였다고 해 봅시다. `/delegate`는 하나씩 등급을
+매기고 이렇게 보고합니다.
 
-1. `utils.py`의 안 쓰는 import 제거 → 사무적, `haiku`
+1. README 설치 항목의 오타 수정 → 사무적, `haiku`
    판단할 게 없는 기계적 작업입니다. 완료.
-2. `api.py` 페이지네이션 off-by-one 수정 → 일반, `sonnet`
-   주변 반복문 로직을 알아야 합니다. 완료.
-3. `user.py`에 빠진 널 체크 추가 → 일반, `sonnet`
-   호출하는 쪽이 무엇을 가정하는지 알아야 합니다. 완료.
+2. 설정 화면 다크 모드 버그 수정(`settings.css`) → 일반, `sonnet`
+   주변 스타일 규칙을 알아야 합니다. 완료.
+3. 로그 정리 스크립트 추가(`scripts/clean_logs.py`) → 일반, `sonnet`
+   기존 스크립트를 따라 만드는 새 파일입니다. 완료.
 4. `billing.py` 결제 웹훅 재시도 로직 재작성 → 고위험, `opus`
    결제 경로라 잘못되면 되돌리기 어렵습니다. diff를 직접 검토한 뒤 완료.
 
